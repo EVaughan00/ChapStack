@@ -6,11 +6,28 @@ module.exports = (app) => {
     res.send('Reached successfully')
   })
 
-  app.post('/register/:user', (req, res) => {
-    var user = req.params.user
-    res.send('Added user ' + user)
+  app.post('/login', (req, res) => {
+    var email = req.body.email
+    var pass = req.body.password
+    var auth = false
+    console.log(email)
+    User.findOne({email: email, password: pass}, function (e, user) {
+      if (user!=null) {
+        auth = true
+        res.send({authenticated: auth})
+      } else {
+        res.send({authenticated: auth})
+      }
+    })
+  })
+
+  app.post('/register', (req, res) => {
+    var email = req.body.email
+    var pass = req.body.password
+    res.send('Added user ' + email)
     var newUser = new User({
-      name: user
+      email: email,
+      password: pass
     })
     newUser.save(function (error) {
         if (error) {
