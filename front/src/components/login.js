@@ -11,7 +11,8 @@ export default class Login extends Component {
 
         this.state = {
             email: '',
-            password: ''
+            password: '',
+            authenticated: false
         }
     }
 
@@ -39,10 +40,11 @@ export default class Login extends Component {
           password: this.state.password
         }
 
-        axios.post('http://localhost:4000/login', userCreds)
+        axios.post('http://10.1.70.5:4000/login', userCreds)
             .then(res => {
               if (res.data.authenticated === true) {
               console.log('Authenticated')
+              this.setState({authenticated: true})
             } else {
               console.log('Did not authenticate')
             }});
@@ -75,6 +77,7 @@ export default class Login extends Component {
                                 onChange={this.onChangePassword}
                                 />
                     </div>
+                    <label>{this.authenticated}</label>
                     <div className="form-group">
                         <input type="submit" value="Register User" className="btn btn-primary" />
                     </div>
