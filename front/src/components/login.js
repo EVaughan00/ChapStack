@@ -1,5 +1,17 @@
 import React, { Component } from 'react';
 import axios from 'axios';
+import GoogleLogin from 'react-google-login';
+// import Header from "../components/header";
+
+const errStyle = {
+  color: 'red'
+};
+
+const inputField = {
+  width: '20%',
+  marginLeft: '40%'
+};
+
 
 export default class Login extends Component {
   constructor(props) {
@@ -8,12 +20,37 @@ export default class Login extends Component {
         this.onChangeEmail = this.onChangeEmail.bind(this);
         this.onChangePassword = this.onChangePassword.bind(this);
         this.onSubmit = this.onSubmit.bind(this);
+        // this.signUp = this.signUp.bind(this);
 
         this.state = {
             email: '',
             password: '',
-            authenticated: false
+            authenticated: false,
+            redirect: false
         }
+    }
+
+    signUp(res, type) {
+      let postData;
+      if (type === 'google') {
+        console.log('is google')
+        postData = { name: res.profileObj.name, provider: type, email: res.profileObj.email }
+      }
+
+      axios.post('http://localhost:4000/signup', postData)
+          .then(resp => {
+            console.log(resp.data.name + ' ' + resp.data.email)
+            if (resp.data.auth!==false) {
+              localStorage.setItem('userName', resp.data.name)
+              localStorage.setItem('userEmail', resp.data.email)
+              console.log('Authenticated')
+              this.setState({authenticated: true})
+              this.setState({redirect: true})
+              this.props.history.push('/dashboard')
+            } else {
+              this.setState({error: <label style={errStyle}>Could Not Authenticate</label>})
+          }
+        });
     }
 
     onChangeEmail(e) {
@@ -40,13 +77,15 @@ export default class Login extends Component {
           password: this.state.password
         }
 
-        axios.post('http://10.1.70.5:4000/login', userCreds)
+        axios.post('http://localhost:4000/login', userCreds)
             .then(res => {
               if (res.data.authenticated === true) {
-              console.log('Authenticated')
+              //console.log('Authenticated')
               this.setState({authenticated: true})
+              localStorage.setItem('auth', true)
+              this.props.history.push('/dashboard')
             } else {
-              console.log('Did not authenticate')
+              this.setState({error: <label style={errStyle}>Incorrect email and/or password</label>})
             }});
 
         this.setState({
@@ -56,13 +95,26 @@ export default class Login extends Component {
     }
 
     render() {
+
+        const responseGoogleFail = (response) => {
+          console.log('Auth Failed')
+        }
+
+        const responseGoogle = (response) => {
+          if (response) {
+            this.signUp(response, 'google');
+          }
+        }
+
         return (
-            <div style={{marginTop: 10}}>
+            <div className="mr-auto" style={{marginTop: 10}}>
                 <h3>Login</h3>
                 <form onSubmit={this.onSubmit}>
                     <div className="form-group">
                         <label>Email: </label>
-                        <input  type="text"
+                        <input
+                                style={inputField}
+                                type="text"
                                 className="form-control"
                                 value={this.state.email}
                                 onChange={this.onChangeEmail}
@@ -71,16 +123,25 @@ export default class Login extends Component {
                     <div className="form-group">
                         <label>Password: </label>
                         <input
+                                style={inputField}
                                 type="password"
                                 className="form-control"
                                 value={this.state.password}
                                 onChange={this.onChangePassword}
                                 />
                     </div>
-                    <label>{this.authenticated}</label>
+                      {this.state.error}
                     <div className="form-group">
-                        <input type="submit" value="Register User" className="btn btn-primary" />
+                        <input type="submit" value="Login" className="btn btn-primary" />
                     </div>
+                    <GoogleLogin
+                      style={{width: 500}}
+                      clientId="1061835778517-k0ssf80tc5v93f6bouu46on6jbbdvgjo.apps.googleusercontent.com"
+                      buttonText="Sign in with Google"
+                      onSuccess={responseGoogle}
+                      onFailure={responseGoogleFail}
+                      cookiePolicy={'single_host_origin'}
+                    />
                 </form>
             </div>
         )

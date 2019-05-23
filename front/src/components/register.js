@@ -39,8 +39,10 @@ export default class Register extends Component {
           password: this.state.password
         }
 
-        axios.post('http://10.1.70.5:4000/register', newUser)
-            .then(res => console.log(res.data));
+        axios.post('http://localhost:4000/register', newUser)
+            .then(res => {
+              this.props.history.push('/dashboard')
+            });
 
         this.setState({
             email: '',
